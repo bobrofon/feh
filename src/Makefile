@@ -1,6 +1,7 @@
 include ../config.mk
 
 TARGETS = \
+	archive.c \
 	events.c \
 	feh_png.c \
 	filelist.c \

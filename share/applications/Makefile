@@ -13,6 +13,7 @@ all: ${TARGETS}
 	-e 's/\$$MAN_DEBUG\$$/${MAN_DEBUG}/' \
 	-e 's/\$$MAN_EXIF\$$/${MAN_EXIF}/' \
 	-e 's/\$$MAN_XINERAMA\$$/${MAN_XINERAMA}/' \
+	-e 's/\$$MAN_ARCHIVE\$$/${MAN_ARCHIVE}/' \
 	-e 's:\$$IMAGEDIR\$$:${image_dir}:' \
 	< ${@:.desktop=.pre} > $@
 

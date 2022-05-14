@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 use 5.010;
-use Test::Command tests => 73;
+use Test::Command tests => 79;
 
 $ENV{HOME} = 'test';
 
@@ -190,3 +190,24 @@ $cmd->stderr_is_eq('');
 $cmd = Test::Command->new( cmd => "$feh --list test/tiny.pbm" );
 $cmd->exit_is_num(0);
 $cmd->stderr_is_eq('');
+
+my $has_archive = 0;
+if ( $version =~ m{ Compile-time \s switches : \s .* archive }ox ) {
+	$has_archive = 1;
+}
+
+$cmd = Test::Command->new( cmd => "$feh --loadable test/archive.zip" );
+$cmd->exit_is_num(1);
+$cmd->stdout_is_eq('');
+$cmd->stderr_is_eq('');
+
+$cmd = Test::Command->new( cmd => "$feh --loadable --recursive-archives test/archive.zip" );
+if ($has_archive) {
+	$cmd->exit_is_num(0);
+	$cmd->stdout_is_eq("archive://test/archive.zip:png\n");
+	$cmd->stderr_is_eq('');
+} else {
+	$cmd->exit_is_num(1);
+	$cmd->stdout_is_eq('');
+	$cmd->stderr_is_eq("$feh: unrecognized option '--recursive-archives'\n");
+}

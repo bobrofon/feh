@@ -149,6 +149,10 @@ struct __fehoptions {
 	signed int conversion_timeout;
 
 	Imlib_Font menu_fn;
+
+#ifdef HAVE_LIBARCHIVE
+	unsigned int recursive_archives;
+#endif
 };
 
 enum __feh_option {
@@ -254,6 +258,9 @@ OPTION_auto_reload,
 OPTION_class,
 OPTION_no_conversion_cache,
 OPTION_window_id,
+#ifdef HAVE_LIBARCHIVE
+OPTION_recursive_archives,
+#endif
 };
 
 //typedef enum __fehoption fehoption;

@@ -33,6 +33,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <curl/curl.h>
 #endif
 
+#ifdef HAVE_LIBARCHIVE
+#include "archive.h"
+#endif
+
 gib_list *filelist = NULL;
 gib_list *original_file_items = NULL; /* original file items from argv */
 int filelist_len = 0;
@@ -40,6 +44,11 @@ gib_list *current_file = NULL;
 extern int errno;
 
 static gib_list *rm_filelist = NULL;
+
+#ifdef HAVE_LIBARCHIVE
+static void feh_archive_add_to_filelist(const char *path);
+static void feh_archive_add_uri_to_filelist(char *uri);
+#endif
 
 feh_file *feh_file_new(char *filename)
 {
@@ -282,6 +291,11 @@ void add_file_to_filelist_recursively(char *origpath, unsigned char level)
 			free(de);
 		}
 		closedir(dir);
+#ifdef HAVE_LIBARCHIVE
+	} else if (opt.recursive_archives && feh_archive_is_supported(path, &st) && (level != FILELIST_LAST)) {
+		D(("Adding archive file %s to filelist\n", path));
+		feh_archive_add_to_filelist(path);
+#endif
 	} else if (S_ISREG(st.st_mode)) {
 		D(("Adding regular file %s to filelist\n", path));
 		filelist = gib_list_add_front(filelist, feh_file_new(path));
@@ -703,3 +717,21 @@ char *feh_http_unescape(char *url)
 }
 
 #endif
+
+#ifdef HAVE_LIBARCHIVE
+
+/*
+ * Adds all files from the archive to the file list using feh archive URI schema.
+ */
+static void feh_archive_add_to_filelist(const char *path)
+{
+	feh_archive_foreach_uri(path, feh_archive_add_uri_to_filelist);
+}
+
+static void feh_archive_add_uri_to_filelist(char *uri)
+{
+	D(("add archive uri '%s' to filelist\n", uri));
+	filelist = gib_list_add_front(filelist, feh_file_new(uri));
+}
+
+#endif /* HAVE_LIBARCHIVE */

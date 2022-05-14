@@ -10,6 +10,7 @@ magic ?= 0
 mkstemps ?= 1
 verscmp ?= 1
 xinerama ?= 1
+archive ?= 0
 
 # Prefix for all installed files
 PREFIX ?= /usr/local
@@ -102,6 +103,14 @@ ifeq (${inotify},1)
 	MAN_INOTIFY = enabled
 else
 	MAN_INOTIFY = disabled
+endif
+
+ifeq (${archive},1)
+	CFLAGS += -DHAVE_LIBARCHIVE
+	LDLIBS += -larchive
+	MAN_ARCHIVE = enabled
+else
+	MAN_ARCHIVE = disabled
 endif
 
 MAN_DATE ?= ${shell date '+%B %d, %Y'}

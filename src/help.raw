@@ -103,6 +103,8 @@ OPTIONS
      --cache-size NUM      imlib cache size in mebibytes (0 .. 2048)
      --auto-reload         automatically reload shown image if file was changed
      --window-id ID        Draw to an existing X11 window by its ID
+     --recursive-archives  Recursively expand any archives in FILE to
+                           the content of those archives (if compiled with archive=1)
 
 MONTAGE MODE OPTIONS
  -X, --ignore-aspect       Set thumbnail to specified width/height without

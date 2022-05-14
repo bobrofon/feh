@@ -44,6 +44,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "exif.h"
 #endif
 
+#ifdef HAVE_LIBARCHIVE
+#include "archive.h"
+#endif
+
 #ifdef HAVE_LIBMAGIC
 #include <magic.h>
 
@@ -74,6 +78,9 @@ static int feh_file_is_raw(char *filename);
 static char *feh_http_load_image(char *url);
 static char *feh_dcraw_load_image(char *filename);
 static char *feh_magick_load_image(char *filename);
+#ifdef HAVE_LIBARCHIVE
+static char *feh_archive_extract_image(char *uri);
+#endif
 
 #ifdef HAVE_LIBXINERAMA
 void init_xinerama(void)
@@ -191,6 +198,8 @@ void feh_print_load_error(char *file, winwidget w, Imlib_Load_Error err, enum fe
 			case LOAD_ERROR_MAGICBYTES:
 				im_weprintf(w, "%s - Does not look like an image (magic bytes missing)", file);
 				break;
+			case LOAD_ERROR_ARCHIVE:
+				im_weprintf(w, "%s - libarchive was unable to extract file from the archive", file);
 		}
 		if (feh_err != LOAD_ERROR_IMLIB) {
 			return;
@@ -322,7 +331,7 @@ int feh_load_image(Imlib_Image * im, feh_file * file)
 {
 	Imlib_Load_Error err = IMLIB_LOAD_ERROR_NONE;
 	enum feh_load_error feh_err = LOAD_ERROR_IMLIB;
-	enum { SRC_IMLIB, SRC_HTTP, SRC_MAGICK, SRC_DCRAW } image_source = SRC_IMLIB;
+	enum { SRC_IMLIB, SRC_HTTP, SRC_MAGICK, SRC_DCRAW, SRC_ARCHIVE } image_source = SRC_IMLIB;
 	char *tmpname = NULL;
 	char *real_filename = NULL;
 
@@ -336,6 +345,19 @@ int feh_load_image(Imlib_Image * im, feh_file * file)
 
 		if ((tmpname = feh_http_load_image(file->filename)) == NULL) {
 			feh_err = LOAD_ERROR_CURL;
+			err = IMLIB_LOAD_ERROR_FILE_DOES_NOT_EXIST;
+		}
+	}
+	else if (feh_archive_is_uri(file->filename)) {
+		image_source = SRC_ARCHIVE;
+
+#ifdef HAVE_LIBARCHIVE
+		tmpname = feh_archive_extract_image(file->filename);
+#else
+		tmpname = NULL;
+#endif
+		if (tmpname == NULL) {
+			feh_err = LOAD_ERROR_ARCHIVE;
 			err = IMLIB_LOAD_ERROR_FILE_DOES_NOT_EXIST;
 		}
 	}
@@ -1865,3 +1887,74 @@ void feh_draw_actions(winwidget w)
 	gib_imlib_free_image_and_decache(im);
 	return;
 }
+
+#ifdef HAVE_LIBARCHIVE
+
+static char *feh_archive_extract_image(char *uri)
+{
+	char *sfn = NULL;
+	if (opt.use_conversion_cache) {
+		if (!conversion_cache)
+			conversion_cache = gib_hash_new();
+		if ((sfn = gib_hash_get(conversion_cache, uri)) != NULL)
+			return sfn;
+	}
+
+	char *basename = strrchr(uri, '/');
+	if (basename == NULL) {
+		basename = uri;
+	} else {
+		++basename;
+	}
+
+	char *tmpname = NULL;
+#ifdef HAVE_MKSTEMPS
+	tmpname = estrjoin("_", "feh_archive_XXXXXX", basename, NULL);
+
+	if (strlen(tmpname) > NAME_MAX) {
+		tmpname[NAME_MAX] = '\0';
+	}
+#else
+	if (strlen(basename) > NAME_MAX-7) {
+		tmpname = estrdup("feh_archive_XXXXXX");
+	} else {
+		tmpname = estrjoin("_", "feh_archive", basename, "XXXXXX", NULL);
+	}
+#endif
+
+	sfn = estrjoin("", "/tmp/", tmpname, NULL);
+	free(tmpname);
+
+	D(("sfn is %s\n", sfn))
+
+#ifdef HAVE_MKSTEMPS
+	int fd = mkstemps(sfn, strlen(basename) + 1);
+#else
+	int fd = mkstemp(sfn);
+#endif
+
+	if (fd == -1) {
+#ifdef HAVE_MKSTEMPS
+		weprintf("open archive url: mkstemps failed:");
+#else
+		weprintf("open archive url: mkstemp failed:");
+#endif
+		free(sfn);
+		return NULL;
+	}
+
+	if (!feh_archive_extract_uri(uri, fd)) {
+		unlink(sfn);
+		free(sfn);
+		sfn = NULL;
+	}
+
+	close(fd);
+
+	if (opt.use_conversion_cache)
+		gib_hash_set(conversion_cache, uri, sfn);
+
+	return sfn;
+}
+
+#endif /* HAVE_LIBARCHIVE */

@@ -437,6 +437,9 @@ static void feh_parse_option_array(int argc, char **argv, int finalrun)
 		{"class"         , 1, 0, OPTION_class},
 		{"no-conversion-cache", 0, 0, OPTION_no_conversion_cache},
 		{"window-id", 1, 0, OPTION_window_id},
+#ifdef HAVE_LIBARCHIVE
+		{"recursive-archives", 0, 0, OPTION_recursive_archives},
+#endif
 		{0, 0, 0, 0}
 	};
 	int optch = 0, cmdx = 0;
@@ -854,6 +857,11 @@ static void feh_parse_option_array(int argc, char **argv, int finalrun)
 				opt.zoom_rate = 1 + ((float)opt.zoom_rate / 100);
 			}
 			break;
+#ifdef HAVE_LIBARCHIVE
+		case OPTION_recursive_archives:
+			opt.recursive_archives = 1;
+			break;
+#endif
 		default:
 			break;
 		}
@@ -990,6 +998,10 @@ static void show_version(void)
 
 #ifdef HAVE_LIBXINERAMA
 		"xinerama "
+#endif
+
+#ifdef HAVE_LIBARCHIVE
+		"archive "
 #endif
 
 	);

@@ -36,6 +36,10 @@ If built with magic=1:
 
  * libmagic
 
+If built with archive=1
+
+ * libarchive
+
 Recommended Binaries
 ---
 
@@ -100,6 +104,7 @@ indicates that the corresponding feature is enabled by default.
 | mkstemps | 1 | Whether your libc provides `mkstemps()`. If set to 0, feh will be unable to load gif images via libcurl |
 | verscmp | 1 | Whether your libc provides `strvercmp()`. If set to 0, feh will use an internal implementation. |
 | xinerama | 1 | Support Xinerama/XRandR multiscreen setups |
+| archive | 0 | use libarchive to view images inside archives |
 
 For example, `make xinerama=0 debug=1` will disable Xinerama support and
 produce a debug build; libcurl and natural sorting support will remain enabled.

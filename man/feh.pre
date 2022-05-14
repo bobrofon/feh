@@ -42,7 +42,7 @@ libexif builtin EXIF reader $MAN_EXIF$
 inotify-based auto-reload of changed files $MAN_INOTIFY$
 .
 .It
-libmagic $MAN_MAGIC$
+libarchive archived file support $MAN_ARCHIVE$
 .
 .El
 .
@@ -1004,6 +1004,12 @@ Zoom images in and out by
 .Ar percent
 .Pq default: 25
 when using the zoom keys and buttons.
+.
+.It Cm --recursive-archives
+.
+Recursively expand any archives in the command line arguments to the content of those archives.
+This option can be combined with
+.Cm --recursive .
 .
 .El
 .
@@ -2136,6 +2142,13 @@ To view images from URLs such as "http://",
 .Nm
 must be compiled with libcurl support.
 It is $MAN_CURL$ in this build
+.
+.Pp
+.
+To view images from archives,
+.Nm
+must be compiled with libarchive support.
+It is $MAN_ARCHIVE$ in this build
 .
 .
 .Sh KNOWN BUGS
